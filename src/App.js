@@ -2,32 +2,32 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 
-const list = [
-  {
-    title: 'React',
-    url: 'https://facebook.gitub.io/react',
-    author: 'Jordan Walke',
-    num_comments: 3,
-    points: 4,
-    objectID: 0,
-  },
-  {
-    title: 'Redux',
-    url: 'https://github.com/reactjs/redux',
-    author: 'Dan Abramov, Andrew Clark',
-    num_comments: 2,
-    points: 5,
-    objectID: 1
-  },
-  { 
-    title: 'Purnima    ',
-    url: 'https://github.com/reactjs/redux',
-    author: 'Purnima Gupta, Purnima Gupta',
-    num_comments: 2,
-    points: 5,
-    objectID: 2
-  }
-];
+// const list = [
+//   {
+//     title: 'React',
+//     url: 'https://facebook.gitub.io/react',
+//     author: 'Jordan Walke',
+//     num_comments: 3,
+//     points: 4,
+//     objectID: 0,
+//   },
+//   {
+//     title: 'Redux',
+//     url: 'https://github.com/reactjs/redux',
+//     author: 'Dan Abramov, Andrew Clark',
+//     num_comments: 2,
+//     points: 5,
+//     objectID: 1
+//   },
+//   { 
+//     title: 'Purnima    ',
+//     url: 'https://github.com/reactjs/redux',
+//     author: 'Purnima Gupta, Purnima Gupta',
+//     num_comments: 2,
+//     points: 5,
+//     objectID: 2
+//   }
+// ];
 
 function isSearched(searchTerm) {
   console.log("searchTerm is ", searchTerm)
@@ -43,14 +43,19 @@ function isSearched(searchTerm) {
 const isSearched = (searchTerm) => (item) =>
 !searchTerm || item.title.toLowerCase().includes(searchTerm.toLowerCase());
 */
+const DEFAULT_QUERY = 'redux';
 
+const PATH_BASE = 'https://hn.algolia.com/api/v1';
+const PATH_SEARCH = '/search';
+const PARAM_SEARCH = 'query=';
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      list,
-      searchTerm: ''
+      list:'',
+      searchTerm: DEFAULT_QUERY,
+      result: null
     };
 
     // or above statement can be written like this as well since varaible name
@@ -60,7 +65,30 @@ class App extends Component {
     }*/
     this.onDismiss = this.onDismiss.bind(this);
     this.onSearchChange = this.onSearchChange.bind(this);
+    this.setSearchTopstories = this.setSearchTopstories.bind(this);
+    this.fetchSearchTopstories = this.fetchSearchTopstories.bind(this);
   }
+
+  setSearchTopstories(result) {
+    this.setState({
+      result
+    })
+  }
+
+  fetchSearchTopstories(searchTerm) {
+    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
+      .then(response => {
+        var a = response.json(); 
+        return a
+      })
+      .then(result => this.setSearchTopstories(result));
+  }
+
+  componentDidMount() {
+    const { searchTerm } = this.state;
+    this.fetchSearchTopstories(searchTerm);
+  }
+
   onSearchChange(event) {
     console.log("event inside onSearchChange", event)
     console.log("target inside onSearchChange", event.target)
@@ -71,49 +99,28 @@ class App extends Component {
   onDismiss(id) {
     console.log(id)
     const isNotId = item => item.objectID !== id;
-    const updatedList = this.state.list.filter(isNotId);
-    this.setState({ list: updatedList });
+    console.log("this.state.result.hits is", this.state.result.hits)
+
+    // const updatedList = this.state.list.filter(isNotId);
+    // this.setState({ list: updatedList });
 
     /* Or above line of code can be rewritten in one line as well but it might get
     less readable */
 
     /*const updatedList = this.state.list.filter( item => item.objectID !== id)*/
-
-    this.setState({ list: updatedList })
   }
 
   render() {
     var helloworld = "Welcome to React";
     var obj = {name: "Purnima", lastname: "Gupta"}
-   // const returnVaue = isSearched(this.state.searchTerm)
-    const { searchTerm, list } = this.state;
+
+    
+    const { searchTerm, result } = this.state;
+
+    if(!result) { return null; }
     return (
       <div className="page">
         <div className="interactions">
-        {/*<form>
-          <input 
-            type="text"
-            value={searchTerm}
-            onChange={this.onSearchChange}/>
-        </form>
-        { list.filter(isSearched(searchTerm)).map(item => 
-             <div key={item.objectID}>
-                <span>
-                  <a href={item.url}>{item.title}</a>
-                </span>
-                <span>{item.author}</span>
-                <span>{item.num_comments}</span>
-                <span>{item.points}</span>
-                <span>
-                  <button
-                    onClick={() => this.onDismiss(item.objectID)}
-                    type="button"
-                  >
-                    Dismiss
-                  </button>
-                </span>
-              </div>
-          )}*/}
             <Search
               value={searchTerm}
               onChange={this.onSearchChange}
@@ -122,7 +129,7 @@ class App extends Component {
             </Search>
           </div>
           <Table
-            list={list}
+            list={result.hits}
             pattern={searchTerm}
             onDismiss={this.onDismiss}
           />
@@ -147,7 +154,7 @@ class Search extends Component {
 
 class Table extends Component {
   render() {
-    const { list, pattern, onDismiss } = this.props;
+    const {  pattern, onDismiss, list } = this.props;
     return (
       <div className="table">
         {
