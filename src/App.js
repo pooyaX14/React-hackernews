@@ -142,7 +142,7 @@ class Search extends Component {
           onChange={onChange}/>
       </form>
     )
-  }
+   }
 }
 
 class Table extends Component {
