@@ -32,8 +32,8 @@ import './App.css';
 function isSearched(searchTerm) {
   console.log("searchTerm is ", searchTerm)
   return function(item) {
-    console.log("item is ", item)
-    console.log(item.title.toLowerCase().includes(searchTerm.toLowerCase()))
+    // console.log("item is ", item)
+    // console.log(item.title.toLowerCase().includes(searchTerm.toLowerCase()))
     return item.title.toLowerCase().includes(searchTerm.toLowerCase());
     // return !searchTerm || item.title.toLowerCase().includes(searchTerm.toLowerCase());
   }
@@ -44,10 +44,16 @@ const isSearched = (searchTerm) => (item) =>
 !searchTerm || item.title.toLowerCase().includes(searchTerm.toLowerCase());
 */
 const DEFAULT_QUERY = 'redux';
+const DEFAULT_PAGE = 0;
+const DEFAULT_HPP = '100';
+const DEFAULT_TAG = 'comment';
 
 const PATH_BASE = 'https://hn.algolia.com/api/v1';
 const PATH_SEARCH = '/search';
 const PARAM_SEARCH = 'query=';
+const PARAM_PAGE = 'page=';
+const PARAM_HPP = 'hitsPerPage=';
+const PARAM_TAGS = 'tags=';
 
 class App extends Component {
   constructor(props) {
@@ -55,7 +61,8 @@ class App extends Component {
     this.state = {
       list:'',
       searchTerm: DEFAULT_QUERY,
-      result: null
+      result: null,
+      tag: DEFAULT_TAG
     };
 
     // or above statement can be written like this as well since varaible name
@@ -65,42 +72,65 @@ class App extends Component {
     }*/
     this.onDismiss = this.onDismiss.bind(this);
     this.onSearchChange = this.onSearchChange.bind(this);
+    this.onSearchChange1 = this.onSearchChange1.bind(this);
     this.setSearchTopstories = this.setSearchTopstories.bind(this);
     this.fetchSearchTopstories = this.fetchSearchTopstories.bind(this);
+    this.onSearchSubmit = this.onSearchSubmit.bind(this);
+  }
+  
+  onSearchSubmit(event) {
+    const { searchTerm } = this.state;
+    this.fetchSearchTopstories(searchTerm, DEFAULT_PAGE, this.state.tag);
+    event.preventDefault();
   }
 
   setSearchTopstories(result) {
+    const { hits, page } = result;
+    const oldHits = page !== 0? this.state.result.hits: [];
+    console.log("oldHits are ", oldHits)
+    const updatedHits = [
+      ...oldHits,
+      ...hits
+    ]
+    console.log("updatedHits are ", updatedHits)
     this.setState({
-      result
+      result: { hits: updatedHits, page}
     })
   }
 
-  fetchSearchTopstories(searchTerm) {
-    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
+  fetchSearchTopstories(searchTerm, page, tag) {
+    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}&${PARAM_TAGS}${tag}`)
       .then(response => {
         var a = response.json(); 
         return a
       })
-      .then(result => this.setSearchTopstories(result));
+      .then(result => { console.log(result); this.setSearchTopstories(result)});
   }
 
   componentDidMount() {
     const { searchTerm } = this.state;
-    this.fetchSearchTopstories(searchTerm);
+    this.fetchSearchTopstories(searchTerm, DEFAULT_PAGE, DEFAULT_TAG);
   }
 
   onSearchChange(event) {
-    console.log("event inside onSearchChange", event)
-    console.log("target inside onSearchChange", event.target)
-    // console.log("value inside onSearchChange", value)
-    this.setState({ searchTerm: event.target.value })
+    this.setState({ searchTerm: event.target.value, tag: event.target.value })
+  }
+
+  onSearchChange1(event) {
+    this.setState({ tag: event.target.value })
   }
 
   onDismiss(id) {
     console.log(id)
     const isNotId = item => item.objectID !== id;
     console.log("this.state.result.hits is", this.state.result.hits)
-
+    const updatedHits = this.state.result.hits.filter(isNotId);
+    this.setState({
+      result: { ...this.state.result, hits: updatedHits}
+    })
+    // this.setState({
+    //   result: Object.assign({}, this.state.result, { hits: updatedHits })
+    // })
     // const updatedList = this.state.list.filter(isNotId);
     // this.setState({ list: updatedList });
 
@@ -116,7 +146,7 @@ class App extends Component {
 
     
     const { searchTerm, result } = this.state;
-
+    const page = ( result && result.page ) || 0;
     if(!result) { return null; }
     return (
       <div className="page">
@@ -124,15 +154,25 @@ class App extends Component {
             <Search
               value={searchTerm}
               onChange={this.onSearchChange}
+              onSubmit={this.onSearchSubmit}
+              onChange1={this.onSearchChange1}
             >
             Search
             </Search>
           </div>
-          <Table
+          { result
+            && <Table
             list={result.hits}
-            pattern={searchTerm}
+            //pattern={searchTerm}
             onDismiss={this.onDismiss}
           />
+          }
+          <div className="interactions">
+            <Button onClick={() => this.fetchSearchTopstories(searchTerm, page + 1
+            )}>
+            More
+            </Button>
+          </div>
       </div>
     );
   }
@@ -140,13 +180,21 @@ class App extends Component {
 
 class Search extends Component {
   render() {
-    const { value, onChange, children } = this.props;
+    const { value, onChange, children, onSubmit, onChange1 } = this.props;
     return (
-      <form>
-        {children} <input 
+      <form onSubmit={onSubmit}>
+        <input type="text"
           type="text"
           value={value}
-          onChange={onChange}/>
+          onChange={onChange}
+        />
+        <button type="submit">
+          {children}
+        </button>
+      <div>
+        <input type="text" onChange={onChange1}/>
+        <button>Tags</button>
+      </div>
       </form>
     )
    }
@@ -154,11 +202,12 @@ class Search extends Component {
 
 class Table extends Component {
   render() {
-    const {  pattern, onDismiss, list } = this.props;
+    const {  onDismiss, list } = this.props;
     return (
       <div className="table">
         {
-          list.filter(isSearched(pattern)).map( item => 
+          // list.filter(isSearched(pattern)).map( item => 
+          list.map( item => 
             <div key={item.objectID} className="table-row">
               <span style={{ width: "40%" }}>
                 <a href={item.url}>{item.title}</a>
