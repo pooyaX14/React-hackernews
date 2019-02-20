@@ -190,23 +190,27 @@ class App extends Component {
             onDismiss={this.onDismiss}
           />
           <div className="interactions">
-            { isLoading
-              ? <Loading/>
-              : <Button onClick={() => this.fetchSearchTopstories(searchKey, page + 1)}>
-                More
-                </Button>
-          }
-          
+            <ButtonWithLoading
+              isLoading={isLoading}
+              onClick={() => this.fetchSearchTopstories(searchKey, page + 1)}
+              >
+              More
+            </ButtonWithLoading>
           </div>
       </div>
     );
   }
 }
-
+//  { isLoading
+//               ? <Loading/>
+//               : <Button onClick={() => this.fetchSearchTopstories(searchKey, page + 1)}>
+//                 More
+//                 </Button>
+// }
+          
 const Loading = () => 
   // (<FontAwesomeIcon icon="address-book-o" size="8x"/>)
   <i className="fas fa-spinner " style={{fontSize: '200px'}}></i>
-
 
 class Search extends Component {
   constructor(props) {
@@ -311,7 +315,11 @@ const Button = ({ onClick, className='', children }) =>
     className: PropTypes.string,
     children: PropTypes.node.isRequired,
   };
-  
+
+  const withLoading = (Component) => ({ isLoading, ...rest}) => (
+    isLoading ? <Loading /> : <Component {...rest} />
+  )
+  const ButtonWithLoading = withLoading(Button);
   // Button.defaultProps = {
   //   className: '',
   // }
