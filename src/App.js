@@ -2,6 +2,10 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 import PropTypes from 'prop-types';
+// import { library } from '@fortawesome/fontawesome-svg-core'
+// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+// import { faIgloo, faSpinner, faAddressBook } from '@fortawesome/free-solid-svg-icons'
+// library.add(faIgloo, faSpinner, )
 
 // const list = [
 //   {
@@ -46,7 +50,7 @@ const isSearched = (searchTerm) => (item) =>
 */
 const DEFAULT_QUERY = 'redux';
 const DEFAULT_PAGE = 0;
-const DEFAULT_HPP = '100';
+const DEFAULT_HPP = '10';
 const DEFAULT_TAG = 'comment';
 
 const PATH_BASE = 'https://hn.algolia.com/api/v1';
@@ -66,6 +70,7 @@ class App extends Component {
       results: null,
       searchKey: '',
       searchTerm: DEFAULT_QUERY,
+      isLoading: false,
     };
 
     this.needsToSearchTopstories = this.needsToSearchTopstories.bind(this);
@@ -98,13 +103,15 @@ class App extends Component {
     this.setState({
       results: {
         ...results,
-        [searchKey]: { hits: updatedHits, page }
-      }
+        [searchKey]: { hits: updatedHits, page },
+      },
+      isLoading: false
     });
     console.log("After settings results state ", this.state.results)
   }
 
   fetchSearchTopstories(searchTerm, page) {
+    this.setState({ isLoading: true })
     fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
       .then(response => response.json())
       .then(result => this.setSearchTopstories(result));
@@ -151,7 +158,8 @@ class App extends Component {
     const {
       searchTerm,
       results,
-      searchKey
+      searchKey,
+      isLoading
     } = this.state;
 
     const page = (
@@ -182,33 +190,66 @@ class App extends Component {
             onDismiss={this.onDismiss}
           />
           <div className="interactions">
-            <Button onClick={() => this.fetchSearchTopstories(searchKey, page + 1)}>
-              More
-            </Button>
+            { isLoading
+              ? <Loading/>
+              : <Button onClick={() => this.fetchSearchTopstories(searchKey, page + 1)}>
+                More
+                </Button>
+          }
+          
           </div>
       </div>
     );
   }
 }
 
-const Search = ({
-  value,
-  onChange,
-  onSubmit,
-  children
-}) =>
-  <form onSubmit={onSubmit}>
-    <input
-      type="text"
-      value={value}
-      onChange={onChange}
-    />
-    <button type="submit">
-      {children}
-    </button>
-  </form>
+const Loading = () => 
+  // (<FontAwesomeIcon icon="address-book-o" size="8x"/>)
+  <i className="fas fa-spinner " style={{fontSize: '200px'}}></i>
 
-Search.PropTypes = {
+
+class Search extends Component {
+  constructor(props) {
+    super(props);
+    // this.setTextInputRef = (element) => {
+    //   console.log("element is ", element)
+    //   this.input = element
+    // }
+    this.setRefs = this.setRefs.bind(this)
+  }
+  setRefs(node) {
+    this.input = node
+    console.log("node is ", node)
+  }
+  componentDidMount() {
+    this.input.focus()
+  }
+  render() {
+    const { 
+      value,
+      onChange,
+      onSubmit,
+      children
+    } = this.props;
+
+    return (
+      <form onSubmit={onSubmit}>
+        <input
+          type="text"
+          value={value}
+          onChange={onChange}
+          //ref={(node) => { this.input = node; }}
+          ref={this.setRefs}
+        />
+        <button type="submit">
+          {children}
+        </button>
+      </form>
+    )
+  }
+}
+
+Search.propTypes = {
   value: PropTypes.string,
   onChange: PropTypes.func,
   onSubmit: PropTypes.func,
@@ -243,7 +284,7 @@ const Table = ({ list, onDismiss }) =>
     )}
   </div>
 
-Table.PropTypes = {
+Table.propTypes = {
   list: PropTypes.arrayOf(
     PropTypes.shape({
       objectID: PropTypes.string.isRequired,
@@ -256,7 +297,7 @@ Table.PropTypes = {
   onDismiss: PropTypes.func.isRequired,
 }
 
-const Button = ({ onClick, className = '', children }) =>
+const Button = ({ onClick, className='', children }) =>
   <button
     onClick={onClick}
     className={className}
@@ -265,14 +306,15 @@ const Button = ({ onClick, className = '', children }) =>
     {children}
   </button>
 
-  Button.PropTypes = {
+  Button.propTypes = {
     onClick: PropTypes.func.isRequired,
     className: PropTypes.string,
     children: PropTypes.node.isRequired,
   };
   
-  Button.defaultProps = {
-    className: '',
-  }
+  // Button.defaultProps = {
+  //   className: '',
+  // }
 export default App;
 
+export { Button, Search, Table };
