@@ -7,32 +7,6 @@ import PropTypes from 'prop-types';
 // import { faIgloo, faSpinner, faAddressBook } from '@fortawesome/free-solid-svg-icons'
 // library.add(faIgloo, faSpinner, )
 
-// const list = [
-//   {
-//     title: 'React',
-//     url: 'https://facebook.gitub.io/react',
-//     author: 'Jordan Walke',
-//     num_comments: 3,
-//     points: 4,
-//     objectID: 0,
-//   },
-//   {
-//     title: 'Redux',
-//     url: 'https://github.com/reactjs/redux',
-//     author: 'Dan Abramov, Andrew Clark',
-//     num_comments: 2,
-//     points: 5,
-//     objectID: 1
-//   },
-//   { 
-//     title: 'Purnima    ',
-//     url: 'https://github.com/reactjs/redux',
-//     author: 'Purnima Gupta, Purnima Gupta',
-//     num_comments: 2,
-//     points: 5,
-//     objectID: 2
-//   }
-// ];
 
 function isSearched(searchTerm) {
   console.log("searchTerm is ", searchTerm)
@@ -97,9 +71,9 @@ class App extends Component {
       ...oldHits,
       ...hits
     ];
-    console.log("oldHits are ", oldHits)
-    console.log("updatedHits array are ", updatedHits)
-    console.log("results are ", results)
+    // console.log("oldHits are ", oldHits)
+    // console.log("updatedHits array are ", updatedHits)
+    // console.log("results are ", results)
     this.setState({
       results: {
         ...results,
@@ -107,7 +81,7 @@ class App extends Component {
       },
       isLoading: false
     });
-    console.log("After settings results state ", this.state.results)
+    // console.log("After settings results state ", this.state.results)
   }
 
   fetchSearchTopstories(searchTerm, page) {
@@ -127,7 +101,7 @@ class App extends Component {
     const { searchTerm } = this.state;
     this.setState({ searchKey: searchTerm });
 
-    console.log("this.state.results are ", this.state.results)
+    // console.log("this.state.results are ", this.state.results)
 
     if (this.needsToSearchTopstories(searchTerm)) {
       this.fetchSearchTopstories(searchTerm, DEFAULT_PAGE);
@@ -191,7 +165,7 @@ class App extends Component {
           />
           <div className="interactions">
             <ButtonWithLoading
-              isLoading={isLoading}
+              // isLoading={isLoading}
               onClick={() => this.fetchSearchTopstories(searchKey, page + 1)}
               >
               More
@@ -210,7 +184,7 @@ class App extends Component {
           
 const Loading = () => 
   // (<FontAwesomeIcon icon="address-book-o" size="8x"/>)
-  <i className="fas fa-spinner " style={{fontSize: '200px'}}></i>
+  <i className="fas fa-spinner " style={{fontSize: '100px'}}></i>
 
 class Search extends Component {
   constructor(props) {
@@ -219,14 +193,18 @@ class Search extends Component {
     //   console.log("element is ", element)
     //   this.input = element
     // }
-    this.setRefs = this.setRefs.bind(this)
+    //this.setRefs = this.setRefs.bind(this)
   }
-  setRefs(node) {
-    this.input = node
-    console.log("node is ", node)
-  }
+  // setRefs(node) {
+  //   this.input = node
+  //   // console.log("node is ", node)
+  // }
+
   componentDidMount() {
-    this.input.focus()
+    // console.log("this.input", this.input)
+    if(this.input) {
+      this.input.focus()
+    }
   }
   render() {
     const { 
@@ -242,8 +220,8 @@ class Search extends Component {
           type="text"
           value={value}
           onChange={onChange}
-          //ref={(node) => { this.input = node; }}
-          ref={this.setRefs}
+          ref={(node) => { this.input = node; }}
+          // ref={this.setRefs}
         />
         <button type="submit">
           {children}
@@ -301,25 +279,70 @@ Table.propTypes = {
   onDismiss: PropTypes.func.isRequired,
 }
 
-const Button = ({ onClick, className='', children }) =>
-  <button
-    onClick={onClick}
-    className={className}
-    type="button"
-  >
-    {children}
-  </button>
+// const Button = ({ onClick, className='', children }) =>
+//   <button
+//     onClick={onClick}
+//     className={className}
+//     type="button"
+//   >
+//     {children}
+//   </button>
 
-  Button.propTypes = {
-    onClick: PropTypes.func.isRequired,
-    className: PropTypes.string,
-    children: PropTypes.node.isRequired,
-  };
+  // Button.propTypes = {
+  //   onClick: PropTypes.func.isRequired,
+  //   className: PropTypes.string,
+  //   children: PropTypes.node.isRequired,
+  // };
 
-  const withLoading = (Component) => ({ isLoading, ...rest}) => (
-    isLoading ? <Loading /> : <Component {...rest} />
-  )
+  const withLoading = (Component) => ({ isLoading, ...rest}) => {
+    console.log(isLoading);
+    console.log(rest);
+    return isLoading ? <Loading /> : <Component {...rest} />
+  }
+// ---------------------------------------------------------------------------------------------------------
+  // const withLoading = (WrappedComponent) => {
+  //   class HOC extends React.Component {
+  //     render() {
+  //         const { isLoading } = this.props
+  //          return (
+  //            isLoading ? <Loading /> : <WrappedComponent {...this.props}/>
+  //          );
+  //        }
+  //      }
+  //      return HOC;
+  // }
+
+  // export default withLoading;
+
+  class Button extends React.Component {
+    render() {
+    const { onClick, className='', children} = this.props
+    
+    return (
+     <button
+       onClick={onClick}
+       className={className}
+       type="button"
+     >
+       {children}
+     </button>
+    )
+  }
+  }
+
+  // export default WrappedComponent;
+
+  // <WrappedComponent
+    // isLoading={isLoading}
+    // onClick={() => this.fetchSearchTopstories(searchKey, page + 1)}
+    // >
+    // More
+  // </WrappedComponent>
+
+//---------------------------------------------------------------------------------------------------------  
   const ButtonWithLoading = withLoading(Button);
+  console.log(ButtonWithLoading);
+  
   // Button.defaultProps = {
   //   className: '',
   // }

@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import App, { Search, Button, Table } from './App';
 import renderer from 'react-test-renderer';
-import { shallow } from 'enzyme';
+import { shallow, mount } from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
 import Enzyme from 'enzyme';
 // it('renders without crashing', () => {
@@ -10,7 +10,7 @@ import Enzyme from 'enzyme';
 //   ReactDOM.render(<App />, div);
 //   ReactDOM.unmountComponentAtNode(div);
 // });
-	Enzyme.configure({ adapter: new Adapter() });
+Enzyme.configure({ adapter: new Adapter() });
 describe('App', () => {
 	it('renders', () => {
 		const div = document.createElement('div');
@@ -30,8 +30,29 @@ describe('Search', () => {
 	it('renders', () => {
 		const div = document.createElement('div');
 		ReactDOM.render(<Search>Search</Search>, div)
+		// it("Gives immediate focus on to name field on load", () => {
 	});
+	// it('shows two items in list', () => {
+	// 	const output = mount(<Search/>);
+ //    expect(output.getElement('input').node === document.activeElement);
+	// });
+	it("Gives immediate focus on to name field on load", () => {
+    // const wrapper = mount(<Search />);
+    // const element = wrapper.instance().input; // This is your input ref
 
+    // spyOn(element, 'focus');
+
+    // //wrapper.simulate('mouseEnter', eventStub());
+
+    // setTimeout(() => expect(element.focus).toHaveBeenCalled(), 250);
+    const wrapper = mount(<Search/>);
+    const inputRef = wrapper.instance().input;
+
+    jest.spyOn(inputRef, "focus");
+
+    wrapper.instance().componentDidMount();
+    expect(inputRef.focus).toHaveBeenCalledTimes(1);
+	});
 	test('snapshots', () => {
 		const component = renderer.create(<Search>Search</Search>)
 		let tree = component.toJSON();
